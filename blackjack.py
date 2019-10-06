@@ -3,9 +3,11 @@ import random
 import math
 
 random.seed(1)
+
+# global state variables
 chips = 1000
-myPot = 0
-inGame = False #gameplay goes bet, play, bet, play, etc.
+myPot = 0 # how much I've bet on the current game
+inGame = False # gameplay goes bet, play, bet, play, etc. inGame is true once bet is made.
 myCards = []
 dealerCards = []
 suits = [" of hearts", " of spades", " of clubs", " of diamonds"]
@@ -25,7 +27,7 @@ cardNums = {'A': 1,
 allCards = []
 deck = []
 
-def resetDeck():
+def resetDeck(): # reshuffle set of cards that can be drawn from
 	global deck
 	for dNum in range(0, 6):
 		for i in range(0, 4):
@@ -33,6 +35,7 @@ def resetDeck():
 				deck.append([card, suits[i]])
 	random.shuffle(deck)
 
+# determines the sum of the cards, and returns two sums if an ace is there and one if not
 def calcTotal(cards):
 	sum1 = 0
 	sum2 = -1
@@ -46,7 +49,7 @@ def calcTotal(cards):
 		return [sum1, sum2] #returns two if they have an ace	
 	return [sum1]
 	
-
+# string friendly card total output
 def parseTotal(cards):
 	total = calcTotal(cards)
 	if(len(total) > 1 and total[1] <= 21):
@@ -54,6 +57,7 @@ def parseTotal(cards):
 	else:
 		return str(total[0])
 
+# deal initial 4 cards
 def dealInitialCards():
 	global myCards
 	global dealerCards
@@ -65,9 +69,11 @@ def dealInitialCards():
 	dealerCards = [deck[2], deck[3]]
 	deck = deck[4:]
 
+# concatenate name of card and suit
 def getCard(card):
 	return card[0] + card[1]
 
+# either display chip amount if in betting stage or state of cards in dealers and my hand with possible totals
 def displayGame(showDealerCards = False):
 	global chips
 	if(not inGame):
@@ -89,6 +95,7 @@ def displayGame(showDealerCards = False):
 		print("Dealer has: ?, " + getCard(dealerCards[1]))
 	print("You have: " + myCardString + " (totals to " + parseTotal(myCards) + ")")
 
+# determine final card totals that would lead to best results for each player
 def getFinalScores():
 	dTotal = calcTotal(dealerCards)
 	myTotal = calcTotal(myCards)
@@ -100,6 +107,7 @@ def getFinalScores():
 		myFinal = myTotal[1]
 	return [dFinal, myFinal]
 
+# reset game after all action and bets returned
 def clearCurrentGame():
 	global myPot
 	global inGame
@@ -110,9 +118,11 @@ def clearCurrentGame():
 	dealerCards = []
 	inGame = False
 	
+# automate dealer strategy and handle final wins/losses
 def dealerPlay():
 	global deck
 	global chips
+	global dealerCards
 	total = calcTotal(dealerCards)
 	while(total[-1] <= 16):
 		print("\nDealer hits!")
@@ -138,9 +148,11 @@ def dealerPlay():
 		chips += myPot
 	clearCurrentGame()
 
+# bust
 def bust():
 	clearCurrentGame()
 
+# main class with all cmd-facing logic and calls to above functions
 class BlackjackCmd(cmd.Cmd):
 	prompt = '\n> '
 	# The default() method is called when none of the other do_*() command methods match.
@@ -152,6 +164,7 @@ class BlackjackCmd(cmd.Cmd):
 		"""Quit the game."""
 		return True # this exits the Cmd application loop in TextAdventureCmd.cmdloop()
 
+	# if player says bet x
 	def do_bet(self, arg):
 		global myPot
 		global chips
@@ -180,6 +193,7 @@ class BlackjackCmd(cmd.Cmd):
 			dealerPlay()
 			displayGame()
 
+	# if player says hit
 	def do_hit(self, arg):
 		global inGame
 		global myCards
@@ -207,6 +221,7 @@ class BlackjackCmd(cmd.Cmd):
 		displayGame()
 		return
 
+	# if player says stand
 	def do_stand(self, arg):
 		global inGame
 		if(not inGame):
@@ -219,8 +234,14 @@ class BlackjackCmd(cmd.Cmd):
 	def help_bet(self):
 		print('You can start a game by betting an amount between 0 and your chip count, ' + str(chips) + '. Use the command \'bet <amount>\'.')
 
+	def help_hit(self):
+		print('During a game, you can recieve an extra card by hitting. Use the command \'hit\'.')
+
+	def help_stand(self):
+		print('During a game, you can end your turn by standing. Use the command \'stand\'.')
+
 	def help_play(self):
-		print('Bet an amount to start the game. During the game, use hit, split, or stand.')
+		print('Bet an amount to start the game. During the game, use hit or stand. Good luck!')
 
 if __name__ == '__main__':
 	for num in cardNums:
